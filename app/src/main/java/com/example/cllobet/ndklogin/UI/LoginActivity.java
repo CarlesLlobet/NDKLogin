@@ -69,7 +69,7 @@ public class LoginActivity extends AppCompatActivity {
                     AesCbcWithIntegrity.CipherTextIvMac civ = new AesCbcWithIntegrity.CipherTextIvMac(civString);
                     String decPass = AesCbcWithIntegrity.decryptString(civ, key);
                     Log.d("[Login] DecryptedPass:", decPass.toString());
-                    if (decPass.equals(password)) {
+                    if (comparePass(decPass, password)) { //decPass.equals(password)
                         textError.setText("");
                         // Launch Dashboard Screen
                         Intent dashboard = new Intent(getApplicationContext(), HomeActivity.class);
@@ -131,7 +131,7 @@ public class LoginActivity extends AppCompatActivity {
      * A native method that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
      */
-    public native String stringFromJNI();
+    public native boolean comparePass(String password1, String password2);
 
     @Override
     public void onBackPressed() {
