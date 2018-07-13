@@ -56,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View view) {
                 user = inputUser.getText().toString();
                 password = inputPassword.getText().toString();
+
                 UserFunctions userFunction = new UserFunctions();
                 try {
                     String salt = userFunction.getSalt(getApplicationContext(), user);
@@ -63,26 +64,27 @@ public class LoginActivity extends AppCompatActivity {
                     AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.generateKeyFromPassword("F0rPr4ct1c3Purp0s30nly", salt);
                     Log.d("[Login] Key:", key.toString());
                     String civString = userFunction.loginUser(getApplicationContext(), user);
-                    if(civString.equals("")){
+                    if (civString.equals("")) {
                         textError.setText("Login incorrecto");
                     } else {
-                    AesCbcWithIntegrity.CipherTextIvMac civ = new AesCbcWithIntegrity.CipherTextIvMac(civString);
-                    String decPass = AesCbcWithIntegrity.decryptString(civ, key);
-                    Log.d("[Login] DecryptedPass:", decPass.toString());
-                    if (comparePass(decPass, password)) { //decPass.equals(password)
-                        textError.setText("");
-                        // Launch Dashboard Screen
-                        Intent dashboard = new Intent(getApplicationContext(), HomeActivity.class);
+                        AesCbcWithIntegrity.CipherTextIvMac civ = new AesCbcWithIntegrity.CipherTextIvMac(civString);
+                        String decPass = AesCbcWithIntegrity.decryptString(civ, key);
+                        Log.d("[Login] DecryptedPass:", decPass.toString());
+                        if (comparePass(decPass, password)) { //decPass.equals(password)
+                            textError.setText("");
+                            // Launch Dashboard Screen
+                            Intent dashboard = new Intent(getApplicationContext(), HomeActivity.class);
 
-                        // Close all views before launching Dashboard
-                        dashboard.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        startActivity(dashboard);
+                            // Close all views before launching Dashboard
+                            dashboard.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(dashboard);
 
-                        // Close Login Screen
-                        finish();
-                    } else {
-                        textError.setText("Login incorrecto");
-                    } }
+                            // Close Login Screen
+                            finish();
+                        } else {
+                            textError.setText("Login incorrecto");
+                        }
+                    }
                 } catch (GeneralSecurityException e) {
                     e.printStackTrace();
                 } catch (UnsupportedEncodingException e) {
@@ -98,31 +100,38 @@ public class LoginActivity extends AppCompatActivity {
                 user = inputUser.getText().toString();
                 password = inputPassword.getText().toString();
                 UserFunctions userFunction = new UserFunctions();
+                boolean res = false;
+                if (user.equals("") || password.equals("")) {
+                    textError.setText("Por favor rellena todos los campos");
+                } else {
+                    try {
+                        String salt = saltString(generateSalt());
+                        AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.generateKeyFromPassword("F0rPr4ct1c3Purp0s30nly", salt);
+                        Log.e("[Register] Salt:", salt.toString());
+                        Log.e("[Register] Key:", key.toString());
+                        AesCbcWithIntegrity.CipherTextIvMac civ = encrypt(password, key);
+                        Log.e("[Register] CipheredPass:", civ.toString());
+                        res = userFunction.registerUser(getApplicationContext(), user, civ.toString());
+                        if (res)
+                            userFunction.saveSalt(getApplicationContext(), user, salt.toString());
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
 
-                try {
-                    String salt = saltString(generateSalt());
-                    AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.generateKeyFromPassword("F0rPr4ct1c3Purp0s30nly", salt);
-                    Log.d("[Register] Salt:", salt.toString());
-                    Log.d("[Register] Key:", key.toString());
-                    AesCbcWithIntegrity.CipherTextIvMac civ = encrypt(password, key);
-                    Log.d("[Register] CipheredPass:", civ.toString());
-                    userFunction.registerUser(getApplicationContext(), user, civ.toString());
-                    userFunction.saveSalt(getApplicationContext(), user, salt.toString());
-                } catch (GeneralSecurityException e) {
-                    e.printStackTrace();
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                    if (res) {
+                        // Launch Dashboard Screen
+                        Intent dashboard = new Intent(getApplicationContext(), HomeActivity.class);
+
+                        // Close all views before launching Dashboard
+                        dashboard.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(dashboard);
+
+                        // Close Login Screen
+                        finish();
+                    } else textError.setText("Error al registrar");
                 }
-
-                // Launch Dashboard Screen
-                Intent dashboard = new Intent(getApplicationContext(), HomeActivity.class);
-
-                // Close all views before launching Dashboard
-                dashboard.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(dashboard);
-
-                // Close Login Screen
-                finish();
             }
         });
     }

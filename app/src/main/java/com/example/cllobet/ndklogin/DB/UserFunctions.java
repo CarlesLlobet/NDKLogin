@@ -10,14 +10,12 @@ public class UserFunctions {
         String res;
         //if ((!user.equals("admin"))||(!password.equals("4dm1n")))
         res = db.SignIn(user);
-        if (!res.equals("")) {
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-            SharedPreferences.Editor editor = preferences.edit();
+        if (res == null) return "";
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = preferences.edit();
 
-            editor.putString("userName", user);
-            editor.commit();
-        }
-        //else res = true
+        editor.putString("userName", user);
+        editor.commit();
         return res;
     }
 
@@ -50,11 +48,14 @@ public class UserFunctions {
     public boolean registerUser(Context context, String username, String password) {
         DatabaseHandler db = new DatabaseHandler(context);
         boolean res = db.addUser(username, password);
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = preferences.edit();
 
-        editor.putString("userName", username);
-        editor.commit();
+        if (res) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString("userName", username);
+            editor.commit();
+        }
+
         return res;
     }
 
