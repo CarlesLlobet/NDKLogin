@@ -3,9 +3,7 @@ package com.example.cllobet.ndklogin.Domain;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.TextView;
 
-import com.example.cllobet.ndklogin.DB.DatabaseHandler;
 import com.example.cllobet.ndklogin.DB.UserFunctions;
 import com.example.cllobet.ndklogin.UI.HomeActivity;
 import com.example.cllobet.ndklogin.UI.LoginActivity;
@@ -31,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
         else {
-            DatabaseHandler db = new DatabaseHandler(getApplicationContext());
             startActivity(new Intent(getApplicationContext(), LoginActivity.class));
         }
     }

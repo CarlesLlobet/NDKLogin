@@ -5,19 +5,6 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 public class UserFunctions {
-    public String loginUser(Context context, String user) {
-        DatabaseHandler db = new DatabaseHandler(context);
-        String res;
-        //if ((!user.equals("admin"))||(!password.equals("4dm1n")))
-        res = db.SignIn(user);
-        if (res == null) return "";
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = preferences.edit();
-
-        editor.putString("userName", user);
-        editor.commit();
-        return res;
-    }
 
     public boolean isUserLoggedIn(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -27,36 +14,22 @@ public class UserFunctions {
 
     public String getUsername(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        if (preferences.contains("userName")) return preferences.getString("userName","");
+        if (preferences.contains("userName")) return preferences.getString("userName", "");
         return "null";
     }
 
     public String getSalt(Context context, String username) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        if (preferences.contains(username)) return preferences.getString(username,"");
+        if (preferences.contains(username)) return preferences.getString(username, "");
         return "null";
     }
 
-    public void saveSalt(Context context, String username, String salt){
+    public void saveSalt(Context context, String username, String salt) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = preferences.edit();
 
         editor.putString(username, salt);
         editor.commit();
-    }
-
-    public boolean registerUser(Context context, String username, String password) {
-        DatabaseHandler db = new DatabaseHandler(context);
-        boolean res = db.addUser(username, password);
-
-        if (res) {
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putString("userName", username);
-            editor.commit();
-        }
-
-        return res;
     }
 
     public void logoutUser(Context context) {

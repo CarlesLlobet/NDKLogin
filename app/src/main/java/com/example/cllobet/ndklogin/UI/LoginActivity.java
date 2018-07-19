@@ -3,6 +3,7 @@ package com.example.cllobet.ndklogin.UI;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -60,37 +61,35 @@ public class LoginActivity extends AppCompatActivity {
                 UserFunctions userFunction = new UserFunctions();
                 try {
                     String salt = userFunction.getSalt(getApplicationContext(), user);
-                    Log.d("[Login] Salt:", salt.toString());
+                    Log.e("[Login] Salt:", salt.toString());
                     AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.generateKeyFromPassword("F0rPr4ct1c3Purp0s30nly", salt);
-                    Log.d("[Login] Key:", key.toString());
-                    String civString = userFunction.loginUser(getApplicationContext(), user);
-                    if (civString.equals("")) {
-                        textError.setText("Login incorrecto");
+                    Log.e("[Login] Key:", key.toString());
+
+//                        AesCbcWithIntegrity.CipherTextIvMac civ = new AesCbcWithIntegrity.CipherTextIvMac(civString);
+//                        String decPass = AesCbcWithIntegrity.decryptString(civ, key);
+//                        Log.d("[Login] DecryptedPass:", decPass.toString());
+                    if (signInDB(user, password, key.toString()) == 0){ //if (comparePass(decPass, password)) { //decPass.equals(password)
+                        textError.setText("");
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("userName", user);
+                        editor.commit();
+                        // Launch Dashboard Screen
+                        Intent dashboard = new Intent(getApplicationContext(), HomeActivity.class);
+
+                        // Close all views before launching Dashboard
+                        dashboard.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(dashboard);
+
+                        // Close Login Screen
+                        finish();
                     } else {
-                        AesCbcWithIntegrity.CipherTextIvMac civ = new AesCbcWithIntegrity.CipherTextIvMac(civString);
-                        String decPass = AesCbcWithIntegrity.decryptString(civ, key);
-                        Log.d("[Login] DecryptedPass:", decPass.toString());
-                        if (comparePass(decPass, password)) { //decPass.equals(password)
-                            textError.setText("");
-                            // Launch Dashboard Screen
-                            Intent dashboard = new Intent(getApplicationContext(), HomeActivity.class);
-
-                            // Close all views before launching Dashboard
-                            dashboard.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            startActivity(dashboard);
-
-                            // Close Login Screen
-                            finish();
-                        } else {
-                            textError.setText("Login incorrecto");
-                        }
+                        textError.setText("Login incorrecto");
                     }
+
                 } catch (GeneralSecurityException e) {
                     e.printStackTrace();
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
                 }
-
             }
         });
 
@@ -109,14 +108,22 @@ public class LoginActivity extends AppCompatActivity {
                         AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.generateKeyFromPassword("F0rPr4ct1c3Purp0s30nly", salt);
                         Log.e("[Register] Salt:", salt.toString());
                         Log.e("[Register] Key:", key.toString());
-                        AesCbcWithIntegrity.CipherTextIvMac civ = encrypt(password, key);
-                        Log.e("[Register] CipheredPass:", civ.toString());
-                        res = userFunction.registerUser(getApplicationContext(), user, civ.toString());
-                        if (res)
-                            userFunction.saveSalt(getApplicationContext(), user, salt.toString());
+                        //AesCbcWithIntegrity.CipherTextIvMac civ = encrypt(password, key);
+                        //Log.e("[Register] CipheredPass:", civ.toString());
+                        //res = userFunction.registerUser(getApplicationContext(), user, civ.toString());
+                        if (signInDB(user, password, key.toString()) == 0 || signInDB(user,password,key.toString()) == 3) {
+                            textError.setText("Este usuario ya existe");
+                        } else {
+                            res = addUserDB(user, password, key.toString());
+                            if (res) {
+                                userFunction.saveSalt(getApplicationContext(), user, salt.toString());
+                                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                SharedPreferences.Editor editor = preferences.edit();
+                                editor.putString("userName", user);
+                                editor.commit();
+                            } else textError.setText("Error al registrar");
+                        }
                     } catch (GeneralSecurityException e) {
-                        e.printStackTrace();
-                    } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
 
@@ -130,7 +137,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         // Close Login Screen
                         finish();
-                    } else textError.setText("Error al registrar");
+                    }
                 }
             }
         });
@@ -141,6 +148,10 @@ public class LoginActivity extends AppCompatActivity {
      * which is packaged with this application.
      */
     public native boolean comparePass(String password1, String password2);
+
+    public native boolean addUserDB(String userName, String password, String key);
+
+    public native int signInDB(String user, String password, String key);
 
     @Override
     public void onBackPressed() {
