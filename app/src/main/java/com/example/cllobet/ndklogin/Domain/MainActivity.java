@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public boolean isDeviceRooted() throws Exception {
+    public boolean isDeviceRooted() {
         //Checks if the device uses a Custom or Stock ROM. It could be possible that it had a Stock ROM but still having been rooted, though
         // cat /system/build.prop | grep ro.build.tags
         // ro.build.tags == release-keys?
@@ -129,11 +129,12 @@ public class MainActivity extends AppCompatActivity {
 
             outputStream.flush();
             su.waitFor();
+            Log.e("RootDetection: ", "executing su worked");
             return true;
         }catch(IOException e){
-            return false;
+            //Exception thrown, executing su didn't work
         }catch(InterruptedException e){
-            return false;
+            //Exception thrown, executing su didn't work
         }
 
         //Check if we can read a file of /data
