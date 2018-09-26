@@ -40,6 +40,138 @@ int setupDatabase() {
 }
 
 JNIEXPORT jboolean JNICALL
+Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEnv *env, jobject instance) {
+    //Check if we can touch a file in any of the following directories:
+//        /
+//        /data
+//        /system
+//        /system/bin
+//        /system/sbin
+//        /system/xbin
+//        /vendor/bin
+//        /sys
+//        /sbin
+//        /etc
+//        /proc
+//        /dev
+
+    FILE* file = fopen("/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/ writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/data/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/data writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/system/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/system writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/system/bin/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/system/bin writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/system/sbin/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/system/sbin writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/system/xbin/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/system/xbin writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/vendor/bin/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/vendor/bin writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/sys/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/sys writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/sbin/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/sbin writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/etc/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/etc writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/proc/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/proc writeable");
+        return JNI_TRUE;
+    }
+    file = fopen("/dev/testRoot.txt","w+");
+    if (file != NULL) {
+        fputs("I AM ROOT!\n", file);
+        fflush(file);
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/dev writeable");
+        return JNI_TRUE;
+    }
+
+    //Check if Superuser.apk exists
+    file = fopen("/system/app/Superuser.apk","r");
+    if (file != NULL) {
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "Superuser.apk found");
+        return JNI_TRUE;
+    }
+
+    //Checks if the OTA certs exist, if not probably a custom ROM has been installed. They could be there and the phone rooted anyway
+    file = fopen("/etc/security/otacerts.zip","r");
+    if (file != NULL) {
+        fclose(file);
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/etc/security/otacerts.zip exists");
+        return JNI_TRUE;
+    }
+
+    return JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
 Java_com_example_cllobet_ndklogin_UI_LoginActivity_comparePass(JNIEnv *env, jobject instance,
                                                                jstring pass1, jstring pass2) {
     const char *nativePass1 = (*env)->GetStringUTFChars(env, pass1, 0);

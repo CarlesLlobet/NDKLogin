@@ -18,11 +18,16 @@ public class MainActivity extends AppCompatActivity {
 
     private UserFunctions userFunctions;
 
+    // Used to load the 'native-lib' library on application startup.
+    static {
+        System.loadLibrary("native-lib");
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (isDeviceRooted()){
+        if (isDeviceRooted() || isDeviceRootedNative()){
             Toast.makeText(getApplicationContext(), "Rooted Device",
                     Toast.LENGTH_LONG).show();
                             finishAndRemoveTask();
@@ -40,21 +45,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public native boolean isDeviceRootedNative();
+
     public boolean isDeviceRooted() {
         //Checks if the device uses a Custom or Stock ROM. It could be possible that it had a Stock ROM but still having been rooted, though
         // cat /system/build.prop | grep ro.build.tags
         // ro.build.tags == release-keys?
 
-        //Checks if the OTA certs exist, if not probably a custom ROM has been installed. They could be there and the phone rooted anyway
-        //ls -l /etc/security/otacerts.zip
-
-        //Check if Superuser.apk exists
-
         //check pm list packages for any "chainfire/magisk" one. They are the most notable being SuperSU
+        try{
+            Process su = Runtime.getRuntime().exec("pm list packages");
+            DataOutputStream outputStream = new DataOutputStream(su.getOutputStream());
+
+            outputStream.flush();
+            su.waitFor();
+            Log.e("RootDetection: ", "executing pm list packages worked. TODO: Check the result");
+            // if (result == eu.chainfire.supersu/com.topjohnwu.magisk) return true;
+        }catch(IOException e){
+            //Exception thrown, executing su didn't work
+        }catch(InterruptedException e){
+            //Exception thrown, executing su didn't work
+        }
 
         //List activities within com.android.settings. If cyanogenmod.superuser is installed, it is rooted
 
-        //Check following binaries:
+        //Check if following binaries exist:
 //        /system/su
 //        /system/bin/su
 //        /sbin/su
@@ -109,20 +124,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        //Check if we can touch a file in any of the following directories:
-//        /data
-//        /
-//        /system
-//        /system/bin
-//        /system/sbin
-//        /system/xbin
-//        /vendor/bin
-//        /sys
-//        /sbin
-//        /etc
-//        /proc
-//        /dev
-
+        //Check if we can execute "su" or "busybox df" (this lastone can be left on Moto E or Oneplus devices by the stock rom)
         try{
             Process su = Runtime.getRuntime().exec("su");
             DataOutputStream outputStream = new DataOutputStream(su.getOutputStream());
@@ -137,9 +139,6 @@ public class MainActivity extends AppCompatActivity {
             //Exception thrown, executing su didn't work
         }
 
-        //Check if we can read a file of /data
-
-        //Check if we can execute "su" or "busybox df" (this lastone can be left on Moto E or Oneplus devices by the stock rom)
 
         return false;
     }
