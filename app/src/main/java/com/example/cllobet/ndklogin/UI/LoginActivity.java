@@ -17,6 +17,8 @@ import com.tozny.crypto.android.AesCbcWithIntegrity;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import static com.tozny.crypto.android.AesCbcWithIntegrity.encrypt;
 import static com.tozny.crypto.android.AesCbcWithIntegrity.generateSalt;
@@ -56,7 +58,10 @@ public class LoginActivity extends AppCompatActivity {
 
             public void onClick(View view) {
                 user = inputUser.getText().toString();
-                password = inputPassword.getText().toString();
+                user = md5(user);
+                Log.e("MD5 is: ", user);
+                String aux = inputPassword.getText().toString();
+                password = xor(aux);
 
                 UserFunctions userFunction = new UserFunctions();
                 try {
@@ -93,54 +98,31 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        btnRegister.setOnClickListener(new View.OnClickListener() {
+    }
 
-            public void onClick(View view) {
-                user = inputUser.getText().toString();
-                password = inputPassword.getText().toString();
-                UserFunctions userFunction = new UserFunctions();
-                boolean res = false;
-                if (user.equals("") || password.equals("")) {
-                    textError.setText("Por favor rellena todos los campos");
-                } else {
-                    try {
-                        String salt = saltString(generateSalt());
-                        AesCbcWithIntegrity.SecretKeys key = AesCbcWithIntegrity.generateKeyFromPassword("F0rPr4ct1c3Purp0s30nly", salt);
-                        Log.e("[Register] Salt:", salt.toString());
-                        Log.e("[Register] Key:", key.toString());
-                        //AesCbcWithIntegrity.CipherTextIvMac civ = encrypt(password, key);
-                        //Log.e("[Register] CipheredPass:", civ.toString());
-                        //res = userFunction.registerUser(getApplicationContext(), user, civ.toString());
-                        if (signInDB(user, password, key.toString()) == 0 || signInDB(user,password,key.toString()) == 3) {
-                            textError.setText("Este usuario ya existe");
-                        } else {
-                            res = addUserDB(user, password, key.toString());
-                            if (res) {
-                                userFunction.saveSalt(getApplicationContext(), user, salt.toString());
-                                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                                SharedPreferences.Editor editor = preferences.edit();
-                                editor.putString("userName", user);
-                                editor.commit();
-                            } else textError.setText("Error al registrar");
-                        }
-                    } catch (GeneralSecurityException e) {
-                        e.printStackTrace();
-                    }
+    public static final String md5(final String s) {
+        final String MD5 = "MD5";
+        try {
+            // Create MD5 Hash
+            MessageDigest digest = java.security.MessageDigest
+                    .getInstance(MD5);
+            digest.update(s.getBytes());
+            byte messageDigest[] = digest.digest();
 
-                    if (res) {
-                        // Launch Dashboard Screen
-                        Intent dashboard = new Intent(getApplicationContext(), HomeActivity.class);
-
-                        // Close all views before launching Dashboard
-                        dashboard.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        startActivity(dashboard);
-
-                        // Close Login Screen
-                        finish();
-                    }
-                }
+            // Create Hex String
+            StringBuilder hexString = new StringBuilder();
+            for (byte aMessageDigest : messageDigest) {
+                String h = Integer.toHexString(0xFF & aMessageDigest);
+                while (h.length() < 2)
+                    h = "0" + h;
+                hexString.append(h);
             }
-        });
+            return hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     /**
@@ -149,7 +131,7 @@ public class LoginActivity extends AppCompatActivity {
      */
     public native boolean comparePass(String password1, String password2);
 
-    public native boolean addUserDB(String userName, String password, String key);
+    public native String xor(String s);
 
     public native int signInDB(String user, String password, String key);
 

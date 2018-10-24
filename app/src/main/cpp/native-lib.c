@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <android/log.h>
+#include <zconf.h>
+#include <sys/ptrace.h>
+#include <wait.h>
 
 #include "sqlite3.h"
 #include "aes.h"
@@ -17,6 +20,10 @@ char *err_msg = 0;
 #define ECB 0
 
 #define KEY_LEN 16
+
+int rootCheck() {
+
+}
 
 int setupDatabase() {
     sqlite3_open_v2(DB_FILE, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
@@ -40,7 +47,38 @@ int setupDatabase() {
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEnv *env, jobject instance) {
+Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDebuggingNative(JNIEnv *env,
+                                                                        jobject instance) {
+    jboolean ret = JNI_FALSE;
+    int child_pid = fork();
+    int status;
+    if (child_pid == 0) {
+        int parentPid = getppid();
+        // attach parent process
+//        if(ptrace(PTRACE_ATTACH,parentPid,NULL,NULL)==0){
+//            // ptrace(PTRACE_DETACH, parentPid, NULL, NULL);
+        _exit(0);
+//        } else{
+//            _exit(-1);
+//        }
+    } else {
+        if (waitpid(child_pid, &status, 0) == -1) {
+            ret = JNI_TRUE;
+        }
+        if (WIFEXITED(status)) {
+            ret = JNI_TRUE;
+        }
+        kill(child_pid, SIGKILL);
+    }
+    if (!ret) {
+        __android_log_write(ANDROID_LOG_ERROR, "Debugging: ", "PTrace worked");
+    }
+    return ret;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEnv *env,
+                                                                           jobject instance) {
     //Check if we can touch a file in any of the following directories:
 //        /
 //        /data
@@ -55,7 +93,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
 //        /proc
 //        /dev
 
-    FILE* file = fopen("/testRoot.txt","w+");
+    FILE *file = fopen("/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -63,7 +101,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/ writeable");
         return JNI_TRUE;
     }
-    file = fopen("/data/testRoot.txt","w+");
+    file = fopen("/data/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -71,7 +109,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/data writeable");
         return JNI_TRUE;
     }
-    file = fopen("/system/testRoot.txt","w+");
+    file = fopen("/system/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -79,7 +117,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/system writeable");
         return JNI_TRUE;
     }
-    file = fopen("/system/bin/testRoot.txt","w+");
+    file = fopen("/system/bin/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -87,7 +125,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/system/bin writeable");
         return JNI_TRUE;
     }
-    file = fopen("/system/sbin/testRoot.txt","w+");
+    file = fopen("/system/sbin/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -95,7 +133,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/system/sbin writeable");
         return JNI_TRUE;
     }
-    file = fopen("/system/xbin/testRoot.txt","w+");
+    file = fopen("/system/xbin/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -103,7 +141,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/system/xbin writeable");
         return JNI_TRUE;
     }
-    file = fopen("/vendor/bin/testRoot.txt","w+");
+    file = fopen("/vendor/bin/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -111,7 +149,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/vendor/bin writeable");
         return JNI_TRUE;
     }
-    file = fopen("/sys/testRoot.txt","w+");
+    file = fopen("/sys/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -119,7 +157,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/sys writeable");
         return JNI_TRUE;
     }
-    file = fopen("/sbin/testRoot.txt","w+");
+    file = fopen("/sbin/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -127,7 +165,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/sbin writeable");
         return JNI_TRUE;
     }
-    file = fopen("/etc/testRoot.txt","w+");
+    file = fopen("/etc/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -135,7 +173,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/etc writeable");
         return JNI_TRUE;
     }
-    file = fopen("/proc/testRoot.txt","w+");
+    file = fopen("/proc/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -143,7 +181,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/proc writeable");
         return JNI_TRUE;
     }
-    file = fopen("/dev/testRoot.txt","w+");
+    file = fopen("/dev/testRoot.txt", "w+");
     if (file != NULL) {
         fputs("I AM ROOT!\n", file);
         fflush(file);
@@ -153,7 +191,7 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
     }
 
     //Check if Superuser.apk exists
-    file = fopen("/system/app/Superuser.apk","r");
+    file = fopen("/system/app/Superuser.apk", "r");
     if (file != NULL) {
         fclose(file);
         __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "Superuser.apk found");
@@ -161,10 +199,11 @@ Java_com_example_cllobet_ndklogin_Domain_MainActivity_isDeviceRootedNative(JNIEn
     }
 
     //Checks if the OTA certs exist, if not probably a custom ROM has been installed. They could be there and the phone rooted anyway
-    file = fopen("/etc/security/otacerts.zip","r");
+    file = fopen("/etc/security/otacerts.zip", "r");
     if (file != NULL) {
         fclose(file);
-        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ", "/etc/security/otacerts.zip exists");
+        __android_log_write(ANDROID_LOG_ERROR, "RootDetection: ",
+                            "/etc/security/otacerts.zip exists");
         return JNI_TRUE;
     }
 
@@ -220,33 +259,42 @@ Java_com_example_cllobet_ndklogin_DB_DatabaseHandler_dropDB(JNIEnv *env, jobject
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_example_cllobet_ndklogin_UI_LoginActivity_addUserDB(JNIEnv *env, jobject instance,
-                                                               jstring user, jstring password, jstring key) {
+Java_com_example_cllobet_ndklogin_Domain_MainActivity_initPasscode(JNIEnv *env, jobject instance,
+                                                                   jstring user, jstring key) {
+
+    const char *password = "{=g|(u"; //r4nd0m (First 3 xored with 0x09 and last 3 with 0x18)
+
+    const char *nativeUser = (*env)->GetStringUTFChars(env, user, 0);
+    const char *nativeKey = (*env)->GetStringUTFChars(env, key, 0);
+    addUserDB(nativeUser, password, nativeKey);
+    (*env)->ReleaseStringUTFChars(env, user, nativeUser);
+    (*env)->ReleaseStringUTFChars(env, key, nativeKey);
+    return JNI_TRUE;
+}
+
+int addUserDB(const char *nativeUser, const char *nativePassword, const char *nativeKey) {
     if (setupDatabase() != 0) {
-        return JNI_FALSE;
+        return -1;
     }
 
     sqlite3_stmt *res;
-    const char *nativeUser = (*env)->GetStringUTFChars(env, user, 0);
-    const char *nativePassword = (*env)->GetStringUTFChars(env, password, 0);
-    const char *nativeKey = (*env)->GetStringUTFChars(env, key, 0);
 
     //xifrar
-    uint8_t *cipherKey = (uint8_t*)calloc(64, sizeof(uint8_t));
-    strcpy((char*)cipherKey, nativeKey);
+    uint8_t *cipherKey = (uint8_t *) calloc(64, sizeof(uint8_t));
+    strcpy((char *) cipherKey, nativeKey);
 
-    uint8_t *cipherText = (uint8_t*)calloc(64, sizeof(uint8_t));
-    strcpy((char*)cipherText, nativePassword);
+    uint8_t *cipherText = (uint8_t *) calloc(64, sizeof(uint8_t));
+    strcpy((char *) cipherText, nativePassword);
 
     char auxIV[64];
 
     //calcular IV
-    for(int i=63; i>=0; i-- ) {
-        auxIV[i] = nativePassword[i%strlen(nativePassword)];
+    for (int i = 63; i >= 0; i--) {
+        auxIV[i] = nativePassword[i % strlen(nativePassword)];
     }
 
-    uint8_t *iv = (uint8_t*)calloc(64, sizeof(uint8_t));
-    strcpy((char*)iv, auxIV);
+    uint8_t *iv = (uint8_t *) calloc(64, sizeof(uint8_t));
+    strcpy((char *) iv, auxIV);
 
     struct AES_ctx ctx;
 
@@ -281,7 +329,7 @@ Java_com_example_cllobet_ndklogin_UI_LoginActivity_addUserDB(JNIEnv *env, jobjec
         __android_log_print(ANDROID_LOG_ERROR, "NDK addUserDB rc", "%d", rc);
         sqlite3_finalize(res);
         sqlite3_close(db);
-        return JNI_FALSE;
+        return -1;
     }
     /*rc = sqlite3_exec(db, insertQuery, callback, 0, &err_msg);
     if (rc != SQLITE_OK) {
@@ -292,15 +340,30 @@ Java_com_example_cllobet_ndklogin_UI_LoginActivity_addUserDB(JNIEnv *env, jobjec
 
     sqlite3_finalize(res);
     sqlite3_close(db);
-    (*env)->ReleaseStringUTFChars(env, user, nativeUser);
-    (*env)->ReleaseStringUTFChars(env, password, nativePassword);
-    (*env)->ReleaseStringUTFChars(env, key, nativeKey);
-    return JNI_TRUE;
+
+    return 0;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_example_cllobet_ndklogin_UI_LoginActivity_xor(JNIEnv *env, jobject instance, jstring s) {
+    const char *nativeS = (*env)->GetStringUTFChars(env, s, 0);
+    uint8_t res[6];
+    for (int i = 0; i < 6; i++) {
+        if (i < 3) {
+            res[i] = (uint8_t)((int)nativeS[i] ^ 9);
+        } else {
+            res[i] = (uint8_t)((int)nativeS[i] ^ 24);
+        }
+    }
+    (*env)->ReleaseStringUTFChars(env, s, nativeS);
+    jstring ret = (*env)->NewStringUTF(env, res);
+    return ret;
 }
 
 JNIEXPORT jint JNICALL
 Java_com_example_cllobet_ndklogin_UI_LoginActivity_signInDB(JNIEnv *env, jobject instance,
-                                                              jstring user, jstring password, jstring key) {
+                                                            jstring user, jstring password,
+                                                            jstring key) {
     if (setupDatabase() != 0) {
         return 1; //no working
     }
@@ -334,26 +397,26 @@ Java_com_example_cllobet_ndklogin_UI_LoginActivity_signInDB(JNIEnv *env, jobject
 
     __android_log_write(ANDROID_LOG_ERROR, "NDK signInDB", "SQLITE_OK and SQLITE_ROW");
 //    const char *password = reinterpret_cast<const char *>(sqlite3_column_text(res, 2));
-    const char *pass = (char *)sqlite3_column_text(res, 0);
+    const char *pass = (char *) sqlite3_column_text(res, 0);
 
     __android_log_write(ANDROID_LOG_ERROR, "NDK signInDB: recoveredPass", pass);
 
 
     //XIFRAR PASS
-    uint8_t *cipherKey = (uint8_t*)calloc(64, sizeof(uint8_t));
-    strcpy((char*)cipherKey, nativeKey);
+    uint8_t *cipherKey = (uint8_t *) calloc(64, sizeof(uint8_t));
+    strcpy((char *) cipherKey, nativeKey);
 
-    uint8_t *cipherText = (uint8_t*)calloc(64, sizeof(uint8_t));
-    strcpy((char*)cipherText, nativePassword);
+    uint8_t *cipherText = (uint8_t *) calloc(64, sizeof(uint8_t));
+    strcpy((char *) cipherText, nativePassword);
 
     char auxIV[64];
 
-    for(int i=63; i>=0; i-- ) {
-        auxIV[i] = nativePassword[i%strlen(nativePassword)];
+    for (int i = 63; i >= 0; i--) {
+        auxIV[i] = nativePassword[i % strlen(nativePassword)];
     }
 
-    uint8_t *iv = (uint8_t*)calloc(64, sizeof(uint8_t));
-    strcpy((char*)iv, auxIV);
+    uint8_t *iv = (uint8_t *) calloc(64, sizeof(uint8_t));
+    strcpy((char *) iv, auxIV);
 
     struct AES_ctx ctx;
 
