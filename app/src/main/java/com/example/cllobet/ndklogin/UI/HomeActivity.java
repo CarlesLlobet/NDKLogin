@@ -10,6 +10,9 @@ import com.example.cllobet.ndklogin.R;
 
 import org.w3c.dom.Text;
 
+import io.michaelrocks.paranoid.Obfuscate;
+
+@Obfuscate
 public class HomeActivity extends AppCompatActivity {
     private UserFunctions uf;
     private TextView un;

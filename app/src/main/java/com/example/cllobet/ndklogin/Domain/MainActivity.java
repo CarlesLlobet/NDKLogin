@@ -16,9 +16,12 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+import io.michaelrocks.paranoid.Obfuscate;
+
 import static com.tozny.crypto.android.AesCbcWithIntegrity.generateSalt;
 import static com.tozny.crypto.android.AesCbcWithIntegrity.saltString;
 
+@Obfuscate
 public class MainActivity extends AppCompatActivity {
 
     private UserFunctions userFunctions;

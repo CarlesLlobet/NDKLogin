@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'io.michaelrocks.paranoid'
+
 
 android {
     compileSdkVersion 28
@@ -40,4 +42,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.github.tozny:java-aes-crypto:1.1.0'
+}
+repositories {
+    mavenCentral()
 }

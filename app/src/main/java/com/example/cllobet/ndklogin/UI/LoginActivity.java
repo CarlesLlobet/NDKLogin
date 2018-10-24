@@ -15,15 +15,13 @@ import com.example.cllobet.ndklogin.DB.UserFunctions;
 import com.example.cllobet.ndklogin.R;
 import com.tozny.crypto.android.AesCbcWithIntegrity;
 
-import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static com.tozny.crypto.android.AesCbcWithIntegrity.encrypt;
-import static com.tozny.crypto.android.AesCbcWithIntegrity.generateSalt;
-import static com.tozny.crypto.android.AesCbcWithIntegrity.saltString;
+import io.michaelrocks.paranoid.Obfuscate;
 
+@Obfuscate
 public class LoginActivity extends AppCompatActivity {
     private Button btnLogin;
     private Button btnRegister;

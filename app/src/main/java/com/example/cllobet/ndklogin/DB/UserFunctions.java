@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import io.michaelrocks.paranoid.Obfuscate;
+
+@Obfuscate
 public class UserFunctions {
 
     public boolean isUserLoggedIn(Context context) {
